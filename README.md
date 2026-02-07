@@ -1,0 +1,188 @@
+# @jeonghochoi/core-worker
+
+NestJS 기반 **Worker / Batch / Scheduler 서비스**에서 공통으로 사용하는  
+인프라 레벨 모듈들을 모아둔 패키지입니다.
+
+DB, HTTP, Mail, Logger, Crypto, File 처리 등  
+워커 전반에서 반복적으로 필요한 기능을 **일관된 인터페이스**로 제공합니다.
+
+> 이 패키지는 **비즈니스 로직을 포함하지 않습니다.**  
+> 워커 인프라 표준화 및 중복 코드 제거를 목적으로 합니다.
+
+---
+
+## ✨ Features
+
+-   ✅ Worker 공통 인프라 모듈 제공
+-   ✅ 다중 DB(MySQL / PostgreSQL / MSSQL) 지원
+-   ✅ HTTP Client + Retry 공통화
+-   ✅ 메일(SMTP / SES) 전송 추상화
+-   ✅ 파일 업로드(S3 / FTP / Local) 유틸
+-   ✅ Excel / CSV 대용량 파일 처리
+-   ✅ 암·복호화 및 범용 유틸
+-   ✅ tsup 기반 ESM 패키징
+
+---
+
+## 📦 Installation
+
+```bash
+npm install @jeonghochoi/core-worker
+# or
+yarn add @jeonghochoi/core-worker
+```
+
+> ⚠️ NestJS Worker 환경을 전제로 합니다.
+
+---
+
+## 📁 Project Structure
+
+```
+src
+├─ core
+│  ├─ config        # 환경 변수 / 설정 관리
+│  ├─ database      # DB 어댑터 (mysql, pg, mssql)
+│  ├─ http          # HTTP Client (axios 기반)
+│  ├─ logger        # Pino 기반 로거
+│  ├─ mail          # Mail (SMTP / SES)
+│  └─ index.ts
+│
+├─ tool
+│  ├─ crypto        # 암·복호화 / 해시 유틸
+│  ├─ file          # 파일 처리 / 업로드
+│  ├─ tool          # 범용 유틸
+│  └─ index.ts
+│
+└─ index.ts         # Public entry
+```
+
+---
+
+## 🔗 Peer Dependencies
+
+이 패키지는 아래 패키지를 **호스트 프로젝트에서 직접 설치**해야 합니다.
+
+```json
+{
+    "@nestjs/common": "^10 || ^11",
+    "@nestjs/config": "^3 || ^4"
+}
+```
+
+> NestJS 메이저 버전에 직접 종속되지 않도록  
+> peerDependencies로 분리되어 있습니다.
+
+---
+
+## 📚 Included Dependencies
+
+### Database
+
+-   `mysql2`
+-   `pg`
+-   `mssql`
+
+### HTTP
+
+-   `axios`
+-   `axios-retry`
+-   `rxjs`
+
+### Mail
+
+-   `nodemailer`
+-   `handlebars`
+-   `@aws-sdk/client-ses`
+
+### File / Storage
+
+-   `exceljs`
+-   `csv-stringify`
+-   `basic-ftp`
+-   `@aws-sdk/client-s3`
+
+### Logging / Validation
+
+-   `pino`
+-   `zod`
+
+---
+
+## 🚀 Usage
+
+### Core 모듈
+
+```ts
+import { logger } from '@jeonghochoi/core-worker';
+```
+
+```ts
+logger.info('worker started');
+```
+
+### HTTP Client
+
+```ts
+import { httpClient } from '@jeonghochoi/core-worker';
+
+const res = await httpClient.get('/health');
+```
+
+### File / Tool 유틸
+
+```ts
+import { encrypt, decrypt } from '@jeonghochoi/core-worker/tool';
+```
+
+```ts
+const encrypted = encrypt('secret');
+```
+
+> 실제 export API는 `index.ts` 기준으로 제공됩니다.
+
+---
+
+## 🛠 Build
+
+```bash
+npm run build
+```
+
+-   `tsup` 기반 빌드
+-   ESM 패키지
+-   결과물은 `dist/` 디렉토리에 생성됩니다.
+
+---
+
+## 📐 Design Principles
+
+-   **Worker 친화적 구조**
+-   Stateless 설계 지향
+-   비즈니스 로직 배제
+-   인프라 코드의 재사용성과 일관성 우선
+-   API 서버보다 **Batch / Queue / Scheduler** 사용을 전제로 설계
+
+---
+
+## ⚠️ Notes
+
+-   API 서버에서도 사용은 가능하지만 일부 모듈은 워커 기준으로 설계됨
+-   장기 실행 프로세스(daemon) 환경을 고려하여 작성됨
+-   Windows / Linux 환경 모두 대응
+
+---
+
+## 📄 License
+
+MIT License
+
+Copyright (c) 2026
+
+Permission is hereby granted, free of charge, to any person obtaining a copy  
+of this software and associated documentation files (the "Software"), to deal  
+in the Software without restriction...
+
+```
+
+```

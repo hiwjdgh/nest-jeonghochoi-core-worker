@@ -1,0 +1,52 @@
+{
+    "name": "@jeonghochoi/core-worker",
+    "version": "0.0.1",
+    "description": "NestJS worker infra modules",
+    "license": "MIT",
+    "type": "module",
+    "files": [
+        "dist"
+    ],
+    "sideEffects": false,
+    "scripts": {
+        "clean": "rimraf dist",
+        "build": "tsup",
+        "prepublishOnly": "npm run build"
+    },
+    "peerDependencies": {
+        "@nestjs/common": "^10 || ^11",
+        "@nestjs/config": "^3 || ^4"
+    },
+    "dependencies": {
+        "@nestjs/axios": "^4.0.1",
+        "@aws-sdk/client-s3": "^3.985.0",
+        "@aws-sdk/client-ses": "^3.985.0",
+        "axios": "^1.13.2",
+        "axios-retry": "^4.5.0",
+        "basic-ftp": "^5.1.0",
+        "csv-stringify": "^6.6.0",
+        "exceljs": "^4.4.0",
+        "handlebars": "^4.7.8",
+        "mssql": "^12.2.0",
+        "mysql2": "^3.16.3",
+        "nodemailer": "^8.0.1",
+        "pg": "^8.18.0",
+        "pino": "^10.2.0",
+        "reflect-metadata": "^0.2.2",
+        "rxjs": "^7.8.2",
+        "zod": "^4.3.6"
+    },
+    "devDependencies": {
+        "@types/mssql": "^9.1.9",
+        "@types/node": "^25.0.8",
+        "@types/nodemailer": "^7.0.9",
+        "@types/pg": "^8.16.0",
+        "pino-pretty": "^13.1.3",
+        "rimraf": "^6.1.2",
+        "tsup": "^8.5.1",
+        "typescript": "^5.9.3"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

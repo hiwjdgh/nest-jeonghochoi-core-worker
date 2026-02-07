@@ -1,0 +1,29 @@
+{
+  // 저장 시 자동 포맷
+  "editor.formatOnSave": true,
+
+  // 이 프로젝트에서만 Prettier 사용
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+  // ESLint도 같이 자동 수정
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+
+  // 🔹 들여쓰기 설정
+  "editor.tabSize": 4,
+  "editor.insertSpaces": true,
+
+  // TS 파일에만 적용 (Nest 기준)
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true
+  },
+  "editor.detectIndentation": false
+}

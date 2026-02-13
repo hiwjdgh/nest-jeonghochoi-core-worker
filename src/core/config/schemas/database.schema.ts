@@ -17,3 +17,5 @@ export const DatabaseConfigSchema = z.object({
 });
 
 export type DatabaseConfig = z.infer<typeof DatabaseConfigSchema>;
+
+export type DatabaseInstanceConfig = z.infer<typeof DatabaseInstanceSchema>;

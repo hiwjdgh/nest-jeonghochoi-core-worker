@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { Pool, PoolConfig } from 'pg';
+import { Pool } from 'pg';
 import { DatabaseAdapter } from '../database-adapter.interface.js';
 import { DatabaseRequestContext } from '../../database.types.js';
 import { DatabaseConfigService } from '../../database-config.service.js';
+import { DatabaseInstanceConfig } from '../../../config/schemas/database.schema.js';
 
 @Injectable()
 export class PostgresqlAdapter implements DatabaseAdapter {
@@ -10,7 +11,7 @@ export class PostgresqlAdapter implements DatabaseAdapter {
 
     constructor(private readonly databaseConfig: DatabaseConfigService) {}
 
-    private getPool(key: string, config: any) {
+    private getPool(key: string, config: DatabaseInstanceConfig) {
         if (!this.pools.has(key)) {
             this.pools.set(
                 key,

@@ -1,27 +1,30 @@
 import { Injectable } from '@nestjs/common';
+import { MailTransportRegistry } from './transport/mail.transport.registry.js';
+import { MailTemplateLoader } from './template/mail.template.loader.js';
+import { MailTemplateRenderer } from './template/mail.template.renderer.js';
 import { MailSendOptions } from './mail.types.js';
-import { MailTransport } from './transport/mail.transport.interface.js';
-import { loadTemplate } from './template/template.loader.js';
-import { renderTemplate } from './template/template.engine.js';
 
 @Injectable()
 export class MailService {
     constructor(
-        private readonly transport: MailTransport,
-        private readonly templateDir?: string
+        private readonly transports: MailTransportRegistry,
+        private readonly templateLoader: MailTemplateLoader,
+        private readonly templateRenderer: MailTemplateRenderer
     ) {}
 
-    async send(options: MailSendOptions) {
-        let html = options.html;
+    async send(
+        transport: 'smtp' | 'ses',
+        templateName: string,
+        context: Record<string, any>,
+        options: Omit<MailSendOptions, 'html'>
+    ) {
+        const source = await this.templateLoader.loadTemplate(templateName);
 
-        if (options.template && this.templateDir) {
-            const source = await loadTemplate(
-                this.templateDir,
-                options.template
-            );
-            html = renderTemplate(source, options.data ?? {});
-        }
+        const html = this.templateRenderer.renderTemplate(source, context);
 
-        await this.transport.send({ ...options, html });
+        await this.transports.use(transport).send({
+            ...options,
+            html,
+        });
     }
 }

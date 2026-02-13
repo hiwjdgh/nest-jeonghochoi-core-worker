@@ -1,4 +1,3 @@
-// src/config/config.service.ts
 import { Injectable } from '@nestjs/common';
 import { CoreConfigFactory } from './config.types.js';
 

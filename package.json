@@ -1,9 +1,18 @@
 {
     "name": "@jeonghochoi/core-worker",
-    "version": "0.0.1",
+    "version": "0.0.7",
     "description": "NestJS worker infra modules",
     "license": "MIT",
-    "type": "module",
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "require": "./dist/index.cjs",
+            "import": "./dist/index.js"
+        }
+    },
     "files": [
         "dist"
     ],

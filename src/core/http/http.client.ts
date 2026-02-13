@@ -1,34 +1,54 @@
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosInstance, AxiosError } from 'axios';
 import axiosRetry from 'axios-retry';
 import { Injectable } from '@nestjs/common';
-import { HttpClientOptions } from './http.types.js';
-import { HttpError } from './http.error.js';
 import { WorkerLogger } from '../logger/logger.service.js';
+import { HttpError } from './http.error.js';
+import { HttpEndpoint } from './http.endpoint.js';
+import { HttpClientOptions } from './http.types.js';
 
 @Injectable()
 export class HttpClient {
-    private client: AxiosInstance;
+    private readonly clients = new Map<string, HttpEndpoint>();
 
-    constructor(
-        options: HttpClientOptions,
-        private readonly logger: WorkerLogger
-    ) {
-        this.client = axios.create({
+    constructor(private readonly logger: WorkerLogger) {}
+
+    /** 앱에서 client 등록 */
+    register(name: string, options: HttpClientOptions) {
+        if (this.clients.has(name)) {
+            return;
+        }
+
+        const axiosClient = this.createAxiosClient(options);
+        this.clients.set(name, new HttpEndpoint(axiosClient));
+    }
+
+    /** client 조회 */
+    use(name: string): HttpEndpoint {
+        const client = this.clients.get(name);
+        if (!client) {
+            throw new Error(`HttpClient "${name}" is not registered`);
+        }
+        return client;
+    }
+
+    /** axios instance 생성 */
+    private createAxiosClient(options: HttpClientOptions): AxiosInstance {
+        const client = axios.create({
             baseURL: options.baseURL,
             timeout: options.timeoutMs ?? 5000,
             headers: options.headers,
         });
 
-        axiosRetry(this.client, {
+        axiosRetry(client, {
             retries: options.retries ?? 3,
             retryCondition: (error) =>
                 axiosRetry.isNetworkError(error) ||
                 axiosRetry.isRetryableError(error),
         });
 
-        this.client.interceptors.response.use(
+        client.interceptors.response.use(
             (res) => res,
-            (err) => {
+            (err: AxiosError) => {
                 const status = err.response?.status;
                 const data = err.response?.data;
 
@@ -37,6 +57,7 @@ export class HttpClient {
                         status,
                         data,
                         url: err.config?.url,
+                        client: options.baseURL,
                     },
                     'HTTP request failed'
                 );
@@ -48,21 +69,7 @@ export class HttpClient {
                 );
             }
         );
-    }
 
-    get<T = any>(url: string, params?: any) {
-        return this.client.get<T>(url, { params }).then((r) => r.data);
-    }
-
-    post<T = any>(url: string, body?: any) {
-        return this.client.post<T>(url, body).then((r) => r.data);
-    }
-
-    put<T = any>(url: string, body?: any) {
-        return this.client.put<T>(url, body).then((r) => r.data);
-    }
-
-    delete<T = any>(url: string) {
-        return this.client.delete<T>(url).then((r) => r.data);
+        return client;
     }
 }

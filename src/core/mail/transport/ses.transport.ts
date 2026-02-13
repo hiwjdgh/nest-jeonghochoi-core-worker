@@ -4,10 +4,18 @@ import { MailSendOptions } from '../mail.types.js';
 import { SesConfig } from '../../config/schemas/mail.ses.schema.js';
 
 export class SesTransport implements MailTransport {
-    private client: SESClient;
+    readonly name = 'ses';
 
-    constructor(private readonly cfg: SesConfig) {
-        this.client = new SESClient({ region: cfg.region });
+    private client: SESClient;
+    private readonly from: string;
+
+    constructor(private readonly config: SesConfig) {
+        this.from = config.from;
+
+        this.client = new SESClient({
+            region: config.region,
+            credentials: config.credentials,
+        });
     }
 
     async send(options: MailSendOptions) {
@@ -17,11 +25,20 @@ export class SesTransport implements MailTransport {
                 ? options.cc
                 : [options.cc]
             : [];
+        const bcc = options.bcc
+            ? Array.isArray(options.bcc)
+                ? options.bcc
+                : [options.bcc]
+            : [];
 
         await this.client.send(
             new SendEmailCommand({
-                Source: this.cfg.from,
-                Destination: { ToAddresses: to, CcAddresses: cc },
+                Source: options.from ?? this.from,
+                Destination: {
+                    ToAddresses: to,
+                    CcAddresses: cc,
+                    BccAddresses: bcc,
+                },
                 Message: {
                     Subject: { Data: options.subject },
                     Body: {

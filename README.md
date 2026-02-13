@@ -109,37 +109,117 @@ src
 
 ---
 
-## 🚀 Usage
+## 🚀 Usage (패키지 사용하는 쪽에서 선언/사용하기)
 
-### Core 모듈
-
-```ts
-import { logger } from '@jeonghochoi/core-worker';
-```
+이 패키지는 **단일 엔트리포인트**(`@jeonghochoi/core-worker`)를 통해 export 됩니다.
 
 ```ts
-logger.info('worker started');
+import { CoreConfigModule, LoggerModule } from '@jeonghochoi/core-worker';
 ```
 
-### HTTP Client
+> `@jeonghochoi/core-worker/tool` 같은 서브패스 import는 `exports`에 열려있지 않으므로,
+> 항상 루트 경로(`@jeonghochoi/core-worker`)에서 import 해야 합니다.
+
+### 1) 호스트 프로젝트에서 의존성 선언
+
+```bash
+npm install @jeonghochoi/core-worker @nestjs/common @nestjs/config zod
+```
+
+### 2) AppModule에서 CoreConfigModule + 인프라 모듈 선언
 
 ```ts
-import { httpClient } from '@jeonghochoi/core-worker';
+import { Module } from '@nestjs/common';
+import { z } from 'zod';
+import {
+    CoreConfigModule,
+    DatabaseConfigSchema,
+    DatabaseModule,
+    HttpModule,
+    loadEnv,
+    LoggerConfigSchema,
+    LoggerModule,
+    MailModule,
+    SmtpConfigSchema,
+} from '@jeonghochoi/core-worker';
 
-const res = await httpClient.get('/health');
+const WorkerConfigSchema = z.object({
+    logger: LoggerConfigSchema,
+    database: DatabaseConfigSchema,
+    smtp: SmtpConfigSchema,
+    mailTemplateDir: z.string(),
+});
+
+@Module({
+    imports: [
+        CoreConfigModule.forRoot({
+            schema: WorkerConfigSchema,
+            load: loadEnv,
+        }),
+        LoggerModule,
+        HttpModule,
+        DatabaseModule,
+        MailModule,
+    ],
+})
+export class AppModule {}
 ```
 
-### File / Tool 유틸
+### 3) 서비스에서 주입받아 사용
 
 ```ts
-import { encrypt, decrypt } from '@jeonghochoi/core-worker/tool';
+import { Injectable } from '@nestjs/common';
+import {
+    DatabaseAdapterRegistry,
+    HttpClient,
+    MailService,
+    WorkerLogger,
+} from '@jeonghochoi/core-worker';
+
+@Injectable()
+export class BatchJob {
+    constructor(
+        private readonly logger: WorkerLogger,
+        private readonly httpClient: HttpClient,
+        private readonly dbRegistry: DatabaseAdapterRegistry,
+        private readonly mailService: MailService
+    ) {}
+
+    async run() {
+        this.logger.log('batch started');
+
+        // HTTP
+        this.httpClient.register('partner', {
+            baseURL: 'https://api.example.com',
+            timeoutMs: 5000,
+            retries: 3,
+        });
+        const health = await this.httpClient.use('partner').get('/health');
+
+        // DB
+        const db = await this.dbRegistry.getConnection('main');
+        await db.query('select 1');
+
+        // Mail
+        await this.mailService.send('smtp', 'job-finished', { ok: true }, {
+            to: 'ops@example.com',
+            subject: 'Batch done',
+        });
+
+        this.logger.log(`health: ${health.status}`);
+    }
+}
 ```
+
+### 4) 유틸 함수 사용
 
 ```ts
-const encrypted = encrypt('secret');
-```
+import { Codec, Hash, Tool } from '@jeonghochoi/core-worker';
 
-> 실제 export API는 `index.ts` 기준으로 제공됩니다.
+const base64 = Codec.toBase64('worker');
+const sha = Hash.sha256('payload');
+const txId = Tool.unique.txId();
+```
 
 ---
 

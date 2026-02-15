@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { createPool, Pool } from 'mysql2/promise';
 import { DatabaseAdapter } from '../database-adapter.interface.js';
 import { DatabaseRequestContext } from '../../database.types.js';
@@ -6,12 +6,16 @@ import { DatabaseConfigService } from '../../database-config.service.js';
 import { DatabaseInstanceConfig } from '../../../config/schemas/database.schema.js';
 
 @Injectable()
-export class MysqlAdapter implements DatabaseAdapter {
+export class MysqlAdapter implements DatabaseAdapter, OnModuleDestroy {
     private pools = new Map<string, Pool>();
 
     constructor(private readonly databaseConfig: DatabaseConfigService) {}
 
-    private getPool(key: string, config: DatabaseInstanceConfig) {
+    private getPool(
+        key: string,
+        config: DatabaseInstanceConfig,
+        database?: string
+    ) {
         if (!this.pools.has(key)) {
             this.pools.set(
                 key,
@@ -20,7 +24,7 @@ export class MysqlAdapter implements DatabaseAdapter {
                     port: config.port,
                     user: config.user,
                     password: config.password,
-                    database: config.database,
+                    database: database ?? config.database,
                     connectionLimit: config.poolSize,
                     waitForConnections: true,
                 })
@@ -41,7 +45,8 @@ export class MysqlAdapter implements DatabaseAdapter {
             );
         }
 
-        const pool = this.getPool(`${rdsId}:${database}`, config);
+        const dbName = database ?? config.database ?? '';
+        const pool = this.getPool(`${rdsId}:${dbName}`, config, database);
 
         return {
             async query(sql, params) {
@@ -71,5 +76,14 @@ export class MysqlAdapter implements DatabaseAdapter {
                 }
             },
         };
+    }
+
+    async onModuleDestroy() {
+        await Promise.all(
+            [...this.pools.values()].map(async (pool) => {
+                await pool.end();
+            })
+        );
+        this.pools.clear();
     }
 }

@@ -1,37 +1,40 @@
 import { Global, Module } from '@nestjs/common';
-import { CoreConfigService } from '../config';
-import { MailService } from './mail.service';
+import { CoreConfigService } from '../config/index.js';
+import { SesConfig } from '../config/schemas/mail.ses.schema.js';
+import { SmtpConfig } from '../config/schemas/mail.smtp.schema.js';
+import { MailService } from './mail.service.js';
 
-import { MailTransportRegistry } from './transport/mail.transport.registry';
-import { SmtpTransport } from './transport/smtp.transport';
-import { SesTransport } from './transport/ses.transport';
+import { MailTransportRegistry } from './transport/mail.transport.registry.js';
+import { SmtpTransport } from './transport/smtp.transport.js';
+import { SesTransport } from './transport/ses.transport.js';
 
-import { MailTemplateLoader } from './template/mail.template.loader';
-import { MailTemplateRenderer } from './template/mail.template.renderer';
+import { MailTemplateLoader } from './template/mail.template.loader.js';
+import { MailTemplateRenderer } from './template/mail.template.renderer.js';
+
+interface MailModuleConfig {
+    mailTemplateDir: string;
+    smtp?: SmtpConfig;
+    ses?: SesConfig;
+}
 
 @Global()
 @Module({
     providers: [
-        // transport registry
         MailTransportRegistry,
-
-        // template loader (dir 주입 지점)
         {
             provide: MailTemplateLoader,
             inject: [CoreConfigService],
-            useFactory: (config: CoreConfigService<any>) =>
-                new MailTemplateLoader(config.get().mailTemplateDir),
+            useFactory: (config: CoreConfigService<MailModuleConfig>) =>
+                new MailTemplateLoader({
+                    templateDir: config.get().mailTemplateDir,
+                }),
         },
-
-        // template renderer (순수)
         MailTemplateRenderer,
-
-        // transport 초기화 (side-effect)
         {
             provide: 'MAIL_TRANSPORTS_INIT',
             inject: [CoreConfigService, MailTransportRegistry],
             useFactory: (
-                config: CoreConfigService<any>,
+                config: CoreConfigService<MailModuleConfig>,
                 registry: MailTransportRegistry
             ) => {
                 const mailConfig = config.get();
@@ -52,8 +55,6 @@ import { MailTemplateRenderer } from './template/mail.template.renderer';
                 }
             },
         },
-
-        // MailService (이제 config 필요 없음)
         MailService,
     ],
     exports: [MailService],

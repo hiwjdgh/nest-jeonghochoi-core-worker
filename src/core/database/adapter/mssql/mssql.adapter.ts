@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import * as mssql from 'mssql';
 import { DatabaseAdapter } from '../database-adapter.interface.js';
 import { DatabaseRequestContext } from '../../database.types.js';
@@ -6,19 +6,23 @@ import { DatabaseConfigService } from '../../database-config.service.js';
 import { DatabaseInstanceConfig } from '../../../config/schemas/database.schema.js';
 
 @Injectable()
-export class MssqlAdapter implements DatabaseAdapter {
+export class MssqlAdapter implements DatabaseAdapter, OnModuleDestroy {
     private pools = new Map<string, mssql.ConnectionPool>();
 
     constructor(private readonly databaseConfig: DatabaseConfigService) {}
 
-    private async getPool(key: string, config: DatabaseInstanceConfig) {
+    private async getPool(
+        key: string,
+        config: DatabaseInstanceConfig,
+        database?: string
+    ) {
         if (!this.pools.has(key)) {
             const pool = await new mssql.ConnectionPool({
                 user: config.user,
                 password: config.password,
                 server: config.host,
                 port: config.port,
-                database: config.database,
+                database: database ?? config.database,
                 options: { encrypt: false },
             }).connect();
             this.pools.set(key, pool);
@@ -38,7 +42,8 @@ export class MssqlAdapter implements DatabaseAdapter {
             );
         }
 
-        const pool = await this.getPool(rdsId, config);
+        const dbName = database ?? config.database ?? '';
+        const pool = await this.getPool(`${rdsId}:${dbName}`, config, database);
 
         return {
             async query(sql, params) {
@@ -80,5 +85,14 @@ export class MssqlAdapter implements DatabaseAdapter {
                 }
             },
         };
+    }
+
+    async onModuleDestroy() {
+        await Promise.all(
+            [...this.pools.values()].map(async (pool) => {
+                await pool.close();
+            })
+        );
+        this.pools.clear();
     }
 }

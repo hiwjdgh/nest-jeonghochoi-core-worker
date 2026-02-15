@@ -1,6 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { HttpClient } from './http.client.js';
 import { WorkerLogger } from '../logger/logger.service.js';
+import { WorkerHttpService } from './http.service.js';
 
 @Global()
 @Module({
@@ -12,7 +13,8 @@ import { WorkerLogger } from '../logger/logger.service.js';
                 return new HttpClient(logger);
             },
         },
+        WorkerHttpService,
     ],
-    exports: [HttpClient],
+    exports: [HttpClient, WorkerHttpService],
 })
 export class HttpModule {}

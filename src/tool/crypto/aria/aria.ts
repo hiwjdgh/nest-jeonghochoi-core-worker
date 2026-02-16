@@ -61,7 +61,7 @@ function validate(cipher: AriaCipher, key: Buffer, iv: Buffer) {
     }
 }
 
-export class AriaUtil {
+export class Aria {
     static async encrypt(
         plain: string,
         key: Buffer,

@@ -1,1 +1,1 @@
-export * from './codec.util.js';
+export * from './codec.js';

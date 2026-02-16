@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-export class HashUtil {
+export class Hash {
     static sha256(data: string, output: 'hex' | 'base64' = 'hex'): string {
         return crypto.createHash('sha256').update(data).digest(output);
     }

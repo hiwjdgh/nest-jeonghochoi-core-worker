@@ -27,13 +27,14 @@
         "@nestjs/config": "^3 || ^4"
     },
     "dependencies": {
-        "@nestjs/axios": "^4.0.1",
         "@aws-sdk/client-s3": "^3.985.0",
         "@aws-sdk/client-ses": "^3.985.0",
+        "@nestjs/axios": "^4.0.1",
         "axios": "^1.13.2",
         "axios-retry": "^4.5.0",
         "basic-ftp": "^5.1.0",
         "csv-stringify": "^6.6.0",
+        "dayjs": "^1.11.19",
         "exceljs": "^4.4.0",
         "handlebars": "^4.7.8",
         "mssql": "^12.2.0",

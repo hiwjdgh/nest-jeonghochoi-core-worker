@@ -3,7 +3,7 @@ import { Encoding } from '../crypto.types.js';
 
 const ALGORITHM = 'aes-256-cbc';
 
-export class AesUtil {
+export class Aes {
     static encrypt(
         plainText: string,
         key: Buffer,

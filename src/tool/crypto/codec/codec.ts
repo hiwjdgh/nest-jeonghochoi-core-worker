@@ -1,4 +1,4 @@
-export class CodecUtil {
+export class Codec {
     static base64Encode(data: string): string {
         return Buffer.from(data, 'utf8').toString('base64');
     }

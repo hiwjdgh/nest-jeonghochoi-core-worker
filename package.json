@@ -1,6 +1,6 @@
 {
     "name": "@jeonghochoi/core-worker",
-    "version": "0.0.9",
+    "version": "0.0.11",
     "description": "NestJS worker infra modules",
     "license": "MIT",
     "main": "./dist/index.cjs",

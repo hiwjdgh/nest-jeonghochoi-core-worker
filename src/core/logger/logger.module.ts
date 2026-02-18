@@ -1,8 +1,12 @@
-// src/logger/logger.module.ts
 import { Global, Module } from '@nestjs/common';
 import { WorkerLogger } from './logger.service.js';
 import { createPinoLogger } from './pino.factory.js';
 import { CoreConfigService } from '../config/config.service.js';
+import { LoggerConfig } from '../config/schemas/logger.schema.js';
+
+interface LoggerModuleConfig {
+    logger: LoggerConfig;
+}
 
 @Global()
 @Module({
@@ -10,7 +14,7 @@ import { CoreConfigService } from '../config/config.service.js';
         {
             provide: 'PINO_LOGGER',
             inject: [CoreConfigService],
-            useFactory: (config: CoreConfigService<any>) => {
+            useFactory: (config: CoreConfigService<LoggerModuleConfig>) => {
                 const cfg = config.get().logger;
                 return createPinoLogger({
                     level: cfg.level,
